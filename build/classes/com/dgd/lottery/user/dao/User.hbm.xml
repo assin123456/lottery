@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<!-- lazy="true"表示只有真正用到数据时才会发送sql语句 -->
+	<class name="com.dgd.lottery.user.dao.User" table="user"
+		batch-size="3" lazy="false">
+		<id name="userid" type="long" column="userid">
+			<generator class="native"></generator>
+		</id>
+		<property name="username" type="string" column="username"></property>
+		<property name="password" type="string" column="password"></property>
+		<property name="fullname" type="string" column="fullname"></property>
+		<property name="mobile" type="string" column="mobile"></property>
+	</class>
+</hibernate-mapping>

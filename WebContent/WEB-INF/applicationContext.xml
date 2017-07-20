@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-4.0.xsd">
+
+	<!-- 扫描 com.jjlink.service 包 -->
+	<context:component-scan base-package="com.dgd.lottery" />
+
+	<!--配置数据库连接池（使用c3p0）start -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${driverClass}" />
+		<property name="jdbcUrl" value="${jdbcUrl}" />
+		<property name="user" value="${user}" />
+		<property name="password" value="${password}" />
+		<!-- 设置数据库连接池的最小连接数 -->
+		<property name="minPoolSize" value="${minPoolSize}" />
+		<!-- 设置数据库连接池的最大连接数 -->
+		<property name="maxPoolSize" value="${maxPoolSize}" />
+		<!-- 设置数据库连接池的连接的最大空闲时间，单位为秒 -->
+		<property name="maxIdleTime" value="1800" />
+		<!-- 当连接池中的连接用完时， c3p0 一次性创建连接的数目 -->
+		<property name="acquireIncrement" value="3" />
+		<property name="maxStatements" value="200" />
+		<!-- 设置数据库连接池的初始化连接数 -->
+		<property name="initialPoolSize" value="10" />
+		<property name="idleConnectionTestPeriod" value="60" />
+		<property name="breakAfterAcquireFailure" value="true" />
+		<property name="testConnectionOnCheckout" value="false" />
+		<!--定义在从数据库获取连接失败以后 重复尝试的次数 默认值为30 小于等于0 表示无限次 -->
+		<property name="acquireRetryAttempts" value="0" />
+		<!--定义尝试的时间间隔 默认为1000ms -->
+		<property name="acquireRetryDelay" value="5000" />
+		<!-- 当连接池用完时客户端调用 getConnection() 后等待获取新连接的时间， 超时后将抛出 SQLException ，如设为 
+			0 则无限期等待。单位毫秒，默认为 0 ； -->
+
+		<property name="checkoutTimeout" value="3000" />
+	</bean>
+	<!--配置数据库连接池（使用c3p0）end -->
+
+	<!--读取配置文件 start -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>/WEB-INF/db.properties</value>
+			</list>
+		</property>
+	</bean>
+	<!-- 通过该读取文件的配置，可以在类里采用注解的方式 -->
+	<!-- <bean id="prop" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="locations">
+        <array>
+            <value>/WEB-INF/ip.properties</value>
+   	    </array>
+        </property>
+    </bean> -->
+    
+	<!--读取配置文件 end -->
+
+	<!-- 创建sessionFactory start -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="mappingLocations">
+			<list>
+				<value>classpath:com/dgd/lottery/*/dao/*.hbm.xml</value>
+			</list>
+		</property>
+
+		<!-- 定义hibernate的sessionFactory的属性 -->
+		<property name="hibernateProperties">
+			<props>
+				<!-- 指定数据库方言 -->
+				<prop key="hibernate.dialect">${dialect}</prop>
+				<!-- 创建session方式为hibernate -->
+				<prop key="hibernate.current_session_context_class">
+					org.springframework.orm.hibernate4.SpringSessionContext
+				</prop>
+				<!-- 是否显示hibernate持久操作所生成的sql -->
+				<prop key="hibernate.show_sql">false</prop>
+				<!-- 设置批量操作时的批次大小，值越大向数据库发送的sql越小，速度越快 -->
+				<prop key="hibernate.jdbc.batch_size">50</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 创建sessionFactory end -->
+
+	<!-- 配置事务管理器 start -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="save*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="save*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="add*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="delete*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="update*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="upload*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="cancel*" propagation="REQUIRED"
+				rollback-for="Exception" />
+			<tx:method name="find*" propagation="REQUIRED"
+				read-only="true" />
+			<tx:method name="deal*" propagation="REQUIRED"
+				rollback-for="Exception" />
+				<tx:method name="cancel*" propagation="REQUIRED"
+				rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+	<!-- 配置事务管理器 end -->
+	<!-- 配置事务切点此前时将事务切点配在service层 start -->
+	<aop:config>
+		<aop:pointcut id="serviceMethods"
+			expression="execution(* com.dgd.lottery.*.api.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethods" />
+	</aop:config>
+
+	<!-- 解决定时问题 -->
+	<task:annotation-driven />
+
+	<!-- 开启事务注解 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<!-- 开启AOP注解配置 自动为spring容器中那些配置@aspectJ切面的bean创建代理，织入切面。 -->
+	<aop:aspectj-autoproxy />
+	
+</beans>
